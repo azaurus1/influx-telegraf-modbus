@@ -1,0 +1,38 @@
+version: "3.7"
+services:
+  telegraf:
+    image: telegraf
+    container_name: telegraf
+    restart: always
+    volumes:
+      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+  mock-modbus-server:
+    container_name: modbus-server
+    image: oitc/modbus-server:latest
+    restart: always
+    command: -f /server_config.json
+    ports:
+      - 5020:1503
+    volumes:
+      - ./server.json:/server_config.json:ro
+  influxdb:
+    image: influxdb:latest
+    volumes:
+      - ./influxdb:/var/lib/influxdb2:rw
+    ports:
+      - "8086:8086"
+    restart: unless-stopped
+  grafana:
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    environment:
+      - GF_DASHBOARDS_MIN_REFRESH_INTERVAL=100ms
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: "2g"
+        reservations:
+          cpus: "1"
+          memory: "1g"
